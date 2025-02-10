@@ -6,7 +6,7 @@ namespace LogManager
     public partial class TestForm : Form
     {
         public LogManager logManager { get; } = new LogManager();
-        private int count = 0;
+
         public TestForm()
         {
             InitializeComponent();
@@ -14,12 +14,7 @@ namespace LogManager
 
         private void LogAdd_Click(object sender, EventArgs e)
         {
-            logManager.AddLog($"Log {count++}");
-        }
-
-        private void FileSaveBtn_Click(object sender, EventArgs e)
-        {
-            logManager.FileSave();
+            logManager.AddLog();
         }
 
         private void FileDeletBtn_Click(object sender, EventArgs e)
@@ -30,6 +25,11 @@ namespace LogManager
         private void LogformBtn_Click(object sender, EventArgs e)
         {
             logManager.LogFormShow();
+        }
+
+        private void StartBtn_Click(object sender, EventArgs e)
+        {
+            logManager.TestStart = true;
         }
     }
 }

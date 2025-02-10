@@ -43,6 +43,7 @@
             this.ContinueBtn.TabIndex = 1;
             this.ContinueBtn.Text = "Continue";
             this.ContinueBtn.UseVisualStyleBackColor = true;
+            this.ContinueBtn.Click += new System.EventHandler(this.ContinueBtn_Click);
             // 
             // StopBtn
             // 
@@ -52,6 +53,7 @@
             this.StopBtn.TabIndex = 2;
             this.StopBtn.Text = "Stop";
             this.StopBtn.UseVisualStyleBackColor = true;
+            this.StopBtn.Click += new System.EventHandler(this.StopBtn_Click);
             // 
             // LogTextBox
             // 
@@ -60,7 +62,7 @@
             this.LogTextBox.Multiline = true;
             this.LogTextBox.Name = "LogTextBox";
             this.LogTextBox.ReadOnly = true;
-            this.LogTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.LogTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.LogTextBox.Size = new System.Drawing.Size(916, 385);
             this.LogTextBox.TabIndex = 3;
             // 
