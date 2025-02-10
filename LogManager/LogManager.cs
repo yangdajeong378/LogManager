@@ -109,15 +109,19 @@ namespace LogManager
             WriteOrCreateFile();
         }
 
-        public void AddLog() //test
+        public void AddLog(int count) //test
         {
-            LogDataQueue.Enqueue($"{GetCurrentDateTime()}, {queueCountName}.log");
-            queueCountName++;
+            for (int i = 0; i < count; i++)
+            {
+                LogDataQueue.Enqueue($"{GetCurrentDateTime()}, {queueCountName}.log");
+                queueCountName++;
+            }
 
             SetCurrentForderPath();
             CreateForder();
             WriteOrCreateFile();
         }
+
 
         private void SetCurrentForderPath()
         {
@@ -129,7 +133,7 @@ namespace LogManager
                 currentForderPath = Convert.ToDateTime($"{currentForderPath.Hour}시 30분");
             }
 
-            else//30분이 안넘어간다면 0분으로 수정
+            else//29분이 안넘어간다면 0분으로 수정
             {
                 currentForderPath = Convert.ToDateTime($"{currentForderPath.Hour}시 0분");
             }
@@ -151,10 +155,13 @@ namespace LogManager
         private void WriteOrCreateFile()
         {
             //위 경로에 파일을 만듦. //이미 있는 파일이라면 덮어쓰기
-            if (logSaveDi == null)
-                return;
+            //if (logSaveDi == null)
+            //    return;
 
             if (currentForderPath == null)
+                return;
+
+            if (logSaveDi == null)
                 return;
 
             try
@@ -267,10 +274,8 @@ namespace LogManager
                 if (TestStart == false)
                     continue;
 
-                for (int i = 0; i < 5; i++)
-                {
-                    AddLog();
-                }
+                AddLog(5);
+                
             }
         }
     }
