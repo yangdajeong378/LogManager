@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LogManager;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -12,17 +13,13 @@ namespace LogManager
         private int queueCountName = 0;
         private LogForm logForm = new LogForm();
         public bool TestStart { get; set; } //test용
-        private DirectoryInfo logSaveDi;
-        private DateTime currentForderPath;
+        private DirectoryInfo currentForderPath;
+        private DateTime currentFileNameData;
         private int minuite = 30;
 
 
         public LogManager()
         {
-            //Thread AutoSaveThread = new Thread(AutoCreateFileTimer); //로그 파일 자동 저장
-            //AutoSaveThread.IsBackground = true;
-            //AutoSaveThread.Start();
-
             Thread AutoDeleteThread = new Thread(AutoDeleteTimer); //오래된 폴더, 파일 자동 삭제
             AutoDeleteThread.IsBackground = true;
             AutoDeleteThread.Start();
@@ -34,17 +31,13 @@ namespace LogManager
             Thread TestLogAddThread = new Thread(TestAddLogTimer); //테스트 로그 추가 
             TestLogAddThread.IsBackground = true;
             TestLogAddThread.Start();
-
-            //Thread AutoWriteThread = new Thread(AutoWriteTimer); //로그 파일 자동 쓰기
-            //AutoWriteThread.IsBackground = true;
-            //AutoWriteThread.Start();
         }
 
         private void LogFormTimer()
         {
             while (true)
             {
-                if (logForm.Disposing) 
+                if (logForm.Disposing)
                     continue;
 
                 if (logForm.IsDisposed)
@@ -56,37 +49,6 @@ namespace LogManager
             }
         }
 
-        //private void AutoCreateFileTimer() //자동저장 타이머
-        //{
-        //    while (true)
-        //    {
-        //        if (TestStart == false)
-        //            continue;
-
-
-        //        string dateTime = DateTime.Today.AddMinutes(-minuite).ToString("yyyyMMdd");
-        //        if (dateTime.CompareTo(saveDataTime.ToString("yyyyMMdd")) > 0)
-        //        {
-        //            saveDataTime = DateTime.Now;
-        //            CreateFile();
-        //        }
-
-        //        Thread.Sleep(100); //0.1초
-        //    }
-        //}
-
-        private void AutoWriteTimer()
-        {
-            while (true)
-            {
-                if (TestStart == false)
-                    continue;
-
-                WriteOrCreateFile();
-
-                Thread.Sleep(100);
-            }
-        }
 
         private void AutoDeleteTimer() //자동삭제 타이머
         {
@@ -105,76 +67,82 @@ namespace LogManager
             LogDataQueue.Enqueue($"{GetCurrentDateTime()}, {log}");
 
             SetCurrentForderPath();
-            CreateForder();
-            WriteOrCreateFile();
+            TryCreateForder();
+            WriteFile(log);
         }
 
-        public void AddLog(int count) //test
+        private int testNum = 0;
+        public void TestAddLog(int count) //test
         {
-            for (int i = 0; i < count; i++)
+            SetCurrentForderPath();
+            TryCreateForder();
+
+            for (int i = testNum; i < testNum + count; i++)
             {
+                WriteFile($"Log{i}");
                 LogDataQueue.Enqueue($"{GetCurrentDateTime()}, {queueCountName}.log");
                 queueCountName++;
             }
+            testNum = testNum + count;
 
-            SetCurrentForderPath();
-            CreateForder();
-            WriteOrCreateFile();
         }
 
 
         private void SetCurrentForderPath()
         {
             string currentMinute = DateTime.Now.ToString("mm");
-            currentForderPath = DateTime.Now;
+            currentFileNameData = DateTime.Now;
 
             if (Int32.Parse(currentMinute) > 29) //29분이 넘어간다면 30분으로 수정 // 뜻 : 30분부터 시작됐다.
             {
-                currentForderPath = Convert.ToDateTime($"{currentForderPath.Hour}시 30분");
+                currentFileNameData = Convert.ToDateTime($"{currentFileNameData.Hour}시 30분");
             }
 
             else//29분이 안넘어간다면 0분으로 수정
             {
-                currentForderPath = Convert.ToDateTime($"{currentForderPath.Hour}시 0분");
+                currentFileNameData = Convert.ToDateTime($"{currentFileNameData.Hour}시 0분");
             }
         }
 
-        private void CreateForder() //폴더 만들기
+        private void TryCreateForder() //폴더 만들기
         {
             //String path = Application.StartupPath;
             //현재 시간 날짜 폴더가 있는지 확인하고 없으면 새로 만듦.
-            string folderPath = $"{Application.StartupPath}\\Log\\{currentForderPath.Year}년\\{currentForderPath.Month}월";
-            logSaveDi = new DirectoryInfo(folderPath);
-            if (logSaveDi.Exists == false)
+            string folderPath = $"{Application.StartupPath}\\Log\\{currentFileNameData.Year}년\\{currentFileNameData.Month}월";
+            currentForderPath = new DirectoryInfo(folderPath);
+            if (currentForderPath.Exists == false)
             {
-                logSaveDi.Create();
+                currentForderPath.Create();
             }
         }
 
-
-        private void WriteOrCreateFile()
+        private void WriteFile(string log)
         {
             //위 경로에 파일을 만듦. //이미 있는 파일이라면 덮어쓰기
             //if (logSaveDi == null)
             //    return;
 
-            if (currentForderPath == null)
+            if (currentFileNameData == null)
                 return;
 
-            if (logSaveDi == null)
+            if (currentForderPath == null)
                 return;
 
             try
             {
                 StreamWriter writer;
-                string strFilePath = logSaveDi.ToString();
-                writer = File.CreateText($"{strFilePath}\\{currentForderPath.ToString("yyyy MM dd HH mm")} Log.txt");
+                string currentFilePath = $"{currentForderPath.ToString()}\\{currentFileNameData.ToString("yyyy_MM_dd_HH_mm")}_Log.txt";
 
-                Queue<string> flashQueue = LogDataQueue;
-                string[] flashArray = flashQueue.ToArray();
-                for (int i = 0; i < LogDataQueue.Count; i++)
+
+                if (File.Exists(currentFilePath)) //파일 존재
                 {
-                    writer.WriteLine(flashArray[i]);
+                    writer = File.AppendText(currentFilePath);
+                    writer.WriteLine($"{GetCurrentDateTime()} : {log}");
+                }
+                else //파일 미존재 파일 열기
+                {
+                    writer = File.CreateText(currentFilePath);
+                    writer.WriteLine(log);
                 }
 
                 writer.Close();
@@ -185,9 +153,10 @@ namespace LogManager
             }
         }
 
+
         private string GetCurrentDateTime() //현재 날짜와 시간 세밀히 반환
         {
-            return DateTime.Now.ToString("yyyy MM dd HH mm");
+            return DateTime.Now.ToString("yyyy_MM_dd_HH_mm");
         }
 
         private string GetCurrentYear() //현재 연도 반환
@@ -274,9 +243,10 @@ namespace LogManager
                 if (TestStart == false)
                     continue;
 
-                AddLog(5);
-                
+                TestAddLog(5);
+
             }
         }
     }
 }
+

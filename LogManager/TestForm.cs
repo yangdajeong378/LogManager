@@ -14,7 +14,7 @@ namespace LogManager
 
         private void LogAdd_Click(object sender, EventArgs e)
         {
-            logManager.AddLog(1);
+            logManager.TestAddLog(5);
         }
 
         private void FileDeletBtn_Click(object sender, EventArgs e)
