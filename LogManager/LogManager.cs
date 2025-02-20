@@ -10,11 +10,12 @@ namespace LogManager
     public class LogManager
     {
         private Queue<string> LogDataQueue = new Queue<string>();
+
         private int queueCountName = 0;
         private LogForm logForm = new LogForm();
         public bool TestStart { get; set; } //test용
         private DirectoryInfo currentForderPath;
-        private DateTime currentFileNameData;
+        private DateTime currentFileNameData; 
         private int minuite = 30;
 
 
@@ -142,7 +143,7 @@ namespace LogManager
                 else //파일 미존재 파일 열기
                 {
                     writer = File.CreateText(currentFilePath);
-                    writer.WriteLine(log);
+                    writer.WriteLine($"{GetCurrentDateTime()} : {log}");
                 }
 
                 writer.Close();
@@ -242,6 +243,7 @@ namespace LogManager
 
                 if (TestStart == false)
                     continue;
+
 
                 TestAddLog(5);
 

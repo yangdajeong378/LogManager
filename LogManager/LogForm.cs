@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -8,7 +9,6 @@ namespace LogManager
     public partial class LogForm : Form
     {
         private bool stopChangeUI = false;
-        private int startQueueCount = 0;
         private int clearPointUnit = 30;
         private bool start = false;
 
@@ -17,25 +17,27 @@ namespace LogManager
             InitializeComponent();
         }
 
-        public void ChangeUI(Queue<string> logQueue, StringBuilder sb)
+        public void ChangeUI(Queue<string> queue, StringBuilder sb)
         {
             if (stopChangeUI)
                 return;
 
             try //이미 클로즈되거나 디스포즈 된 로그폼 빠져나가게 하기
             {
-                if (sb == null)
+                if (sb == null) //UI 스레드일때는 건너뛰기
                 {
-                    sb = new StringBuilder();
-
-                    if (logQueue.Count > startQueueCount + clearPointUnit)
+                    if (queue.Count > clearPointUnit) //큐가 30을 넘을 경우
                     {
-                        startQueueCount = startQueueCount + clearPointUnit;
+                        for (int i = 0; i < clearPointUnit; i++) //큐에서 30만큼 디큐해준다.
+                        {
+                            queue.Dequeue();
+                        }
                     }
-                    string[] logArray = logQueue.ToArray();
-                    for (int i = startQueueCount; i < logQueue.Count; i++)
+
+                    sb = new StringBuilder();
+                    foreach (string log in queue.ToArray())
                     {
-                        sb.AppendLine(logArray[i]);
+                        sb.AppendLine(log); 
                     }
                 }
 
@@ -43,7 +45,7 @@ namespace LogManager
                 {
                     Invoke(new MethodInvoker(delegate
                     {
-                        ChangeUI(logQueue, sb);
+                        ChangeUI(queue, sb);
                     }));
                 }
                 else
